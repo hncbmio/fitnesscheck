@@ -54,7 +54,7 @@
 <body>
 
 <div class="card">
-    <h2>🏃 115年華南Fitness We Can<br>活動一 運動達標 <br>運動紀錄初步判定工具</br></h2>
+    <h2>🏃 115年華南Fitness We Can<br>活動一 運動達標 <br>運動紀錄初判工具</br></h2>
     
     <div class="disclaimer">
         ■■ <strong>重要聲明</strong><br>
@@ -108,7 +108,7 @@
                     <input type="number" class="d-duration" placeholder="須滿 20">
                 </div>
                 <div class="input-group">
-                    <label>距離 <span class="label-hint">(擇一)</span></label>
+                    <label>距離 <span class="label-hint">至少1公里)</span></label>
                     <div class="dist-group">
                         <input type="number" class="d-distance" step="0.01" placeholder="數值">
                         <select class="d-unit">
@@ -164,7 +164,7 @@
             const isHrOk = (!isNaN(hr) && hr > 0);
 
             if (!isDistanceOk && !isHrOk) {
-                errors.push("距離未達1km標竿且無心率紀錄");
+                errors.push("距離未達1km且無心率紀錄");
             }
 
             if (errors.length === 0) {
@@ -196,3 +196,4 @@
 
 </body>
 </html>
+
