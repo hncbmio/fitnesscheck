@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+   <script src="https://cdn.sheetjs.com"></script>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>115年華南Fitness We Can 判定工具</title>
@@ -77,6 +78,7 @@
    <div class="btn-group">
        <button class="add-btn" onclick="addEntry()">＋ 新增一筆紀錄 (上限10筆)</button>
        <button class="check-btn" onclick="checkAll()">🚀 開始初步判定</button>
+      <button onclick="exportToExcel()" style="background-color: #2e7d32; color: white;">匯出 Excel</button>
    </div>
  
    <div id="result-container"></div>
@@ -196,9 +198,60 @@
    }
  
    addEntry();
+
+   function exportToExcel() {
+       const rows = document.querySelectorAll('.entry-row');
+       if (rows.length === 0) {
+           alert("沒有資料可以匯出");
+           return;
+       }
+
+       // 準備 Excel 資料表頭
+       const data = [
+           ["運動日期", "運動項目", "時間(分)", "距離", "單位", "平均心率", "判定結果", "備註"]
+       ];
+
+       rows.forEach((row, index) => {
+           const date = row.querySelector('.d-date').value;
+           const activity = row.querySelector('.d-activity').value.trim() || "未填寫";
+           const duration = parseFloat(row.querySelector('.d-duration').value) || 0;
+           const distVal = parseFloat(row.querySelector('.d-distance').value) || 0;
+           const unit = row.querySelector('.d-unit').value;
+           const hr = parseFloat(row.querySelector('.d-hr').value) || 0;
+
+           // 判定邏輯 (與 checkAll 一致)
+           let kmEquivalent = (unit === 'mi') ? distVal * 1.60934 : distVal;
+           const isDurationOk = duration >= 20;
+           const isDistanceOk = kmEquivalent >= 1;
+           const isHrOk = hr > 0;
+           
+           let status = (isDurationOk && (isDistanceOk || isHrOk)) ? "符合" : "未達標";
+           let note = "";
+           if (!isDurationOk) note += "時間不足 ";
+           if (!isDistanceOk && !isHrOk) note += "距離/心率不符";
+
+           // 加入資料列
+           data.push([date, activity, duration, distVal, unit, hr, status, note]);
+       });
+
+       // 3. 使用 SheetJS 產生 Excel 檔案
+       const worksheet = XLSX.utils.aoa_to_sheet(data);
+       const workbook = XLSX.utils.book_new();
+       XLSX.utils.book_append_sheet(workbook, worksheet, "運動紀錄");
+
+       // 設定欄位寬度
+       worksheet['!cols'] = [ {wch:15}, {wch:15}, {wch:10}, {wch:10}, {wch:8}, {wch:10}, {wch:10}, {wch:20} ];
+
+       // 檔名加入 2026 年日期戳記
+       const fileName = `運動紀錄匯出_20260126.xlsx`;
+       
+       // 執行下載
+       XLSX.writeFile(workbook, fileName);
+   }
 </script>
  
 </body>
 </html>
+
 
 
