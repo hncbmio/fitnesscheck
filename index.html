@@ -1,200 +1,202 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>115年華南Fitness We Can 判定工具</title>
-    <style>
-        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 20px; }
-        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; }
-        h2 { color: #c0392b; text-align: center; margin-bottom: 15px; font-size: 22px; line-height: 1.4; }
-        
-        .disclaimer { 
-            background-color: #fff3cd; 
-            color: #856404; 
-            padding: 12px; 
-            border-radius: 8px; 
-            border: 1px solid #ffeeba; 
-            font-size: 14px; 
-            line-height: 1.6; 
-            margin-bottom: 20px; 
-            text-align: center;
-        }
-
-        .banner-img { width: 100%; border-radius: 8px; margin-bottom: 15px; height: 160px; object-fit: cover; }
-        
-        .entry-row { border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #fafafa; position: relative; }
-        .entry-row h4 { margin-top: 0; color: #555; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .input-group { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 4px; font-size: 14px; font-weight: bold; color: #444; }
-        .label-hint { font-size: 12px; color: #e67e22; font-weight: normal; }
-        
-        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        .dist-group { display: flex; gap: 5px; }
-        .dist-group input { flex: 2; }
-        .dist-group select { flex: 1; background-color: #f0f0f0; }
-
-        .btn-group { display: flex; gap: 12px; margin-top: 10px; }
-        .add-btn { background-color: #3498db; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: bold; }
-        .check-btn { background-color: #27ae60; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; flex: 1; font-weight: bold; }
-        .remove-btn { position: absolute; top: 12px; right: 12px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 26px; height: 26px; cursor: pointer; font-weight: bold; }
-        
-        #result-container { margin-top: 25px; border-top: 2px dashed #eee; padding-top: 15px; }
-        .summary-box { background: #e8f4fd; border: 1px solid #3498db; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-around; font-size: 16px; font-weight: bold; }
-        .summary-pass { color: #27ae60; }
-        .summary-fail { color: #e74c3c; }
-        .result-title { font-weight: bold; margin-bottom: 10px; color: #2c3e50; }
-        .result-item { padding: 12px; border-radius: 6px; margin-bottom: 8px; font-size: 15px; border-left: 6px solid; }
-        .pass-item { background: #d4edda; color: #155724; border-left-color: #28a745; }
-        .fail-item { background: #f8d7da; color: #721c24; border-left-color: #dc3545; }
-    </style>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>115年華南Fitness We Can 判定工具</title>
+   <style>
+       /* 基礎樣式 */
+       body { font-family: "Microsoft JhengHei", sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding: 10px; margin: 0; }
+       .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 600px; box-sizing: border-box; }
+       h2 { color: #c0392b; text-align: center; margin-bottom: 15px; font-size: 1.4rem; line-height: 1.4; }
+       
+       .disclaimer {
+           background-color: #fff3cd; color: #856404; padding: 12px; border-radius: 8px; border: 1px solid #ffeeba;
+           font-size: 14px; line-height: 1.6; margin-bottom: 20px; text-align: center;
+       }
+ 
+       .banner-img { width: 100%; border-radius: 8px; margin-bottom: 15px; height: 140px; object-fit: cover; }
+       
+       .entry-row { border: 1px solid #e0e0e0; padding: 15px; border-radius: 8px; margin-bottom: 15px; background: #fafafa; position: relative; }
+       .entry-row h4 { margin-top: 0; color: #555; border-bottom: 1px solid #eee; padding-bottom: 8px; font-size: 1.1rem; }
+       
+       /* 網格系統 - 預設兩欄 */
+       .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+       .input-group { margin-bottom: 10px; }
+       .full-width { grid-column: span 2; } /* 跨欄設定 */
+ 
+       label { display: block; margin-bottom: 4px; font-size: 14px; font-weight: bold; color: #444; }
+       .label-hint { font-size: 12px; color: #e67e22; font-weight: normal; }
+       
+       input, select { width: 100%; padding: 12px 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 16px; } /* 16px 防止 iOS 自動放大 */
+       
+       .dist-group { display: flex; gap: 5px; }
+       .dist-group input { flex: 2; }
+       .dist-group select { flex: 1; background-color: #f0f0f0; }
+ 
+       .btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+       .add-btn { background-color: #3498db; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
+       .check-btn { background-color: #27ae60; color: white; border: none; padding: 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 16px; }
+       .remove-btn { position: absolute; top: 10px; right: 10px; background: #e74c3c; color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-weight: bold; }
+       
+       #result-container { margin-top: 25px; border-top: 2px dashed #eee; padding-top: 15px; }
+       .summary-box { background: #e8f4fd; border: 1px solid #3498db; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-around; font-size: 16px; font-weight: bold; }
+       .summary-pass { color: #27ae60; }
+       .summary-fail { color: #e74c3c; }
+       .result-item { padding: 12px; border-radius: 6px; margin-bottom: 8px; font-size: 15px; border-left: 6px solid; line-height: 1.5; }
+       .pass-item { background: #d4edda; color: #155724; border-left-color: #28a745; }
+       .fail-item { background: #f8d7da; color: #721c24; border-left-color: #dc3545; }
+ 
+       /* RWD 行動裝置優化 */
+       @media (max-width: 480px) {
+           .grid { grid-template-columns: 1fr; } /* 手機版全部變單欄 */
+           .full-width { grid-column: span 1; }
+           h2 { font-size: 1.2rem; }
+           .btn-group { flex-direction: column; }
+           .summary-box { flex-direction: column; gap: 8px; align-items: center; }
+       }
+   </style>
 </head>
 <body>
-
+ 
 <div class="card">
-    <h2>🏃 115年華南Fitness We Can<br>活動一 運動達標 <br>運動紀錄初判工具</br></h2>
-    
-    <div class="disclaimer">
-        ■■ <strong>重要聲明</strong><br>
-        此網頁僅提供參加同仁初步自行確認紀錄是否符合規定，<strong>非正式審核判定結果。</strong><br>
-        <strong>(本網頁不會留存您的個人運動紀錄)</strong>
-    </div>
-
-    <img src="https://images.unsplash.com" alt="Fitness" class="banner-img">
-
-    <div id="entries">
-        <!-- 紀錄列 -->
-    </div>
-
-    <div class="btn-group">
-        <button class="add-btn" onclick="addEntry()">■ 新增一筆紀錄 (上限10筆)</button>
-        <button class="check-btn" onclick="checkAll()">🚀 開始初步判定</button>
-    </div>
-
-    <div id="result-container"></div>
+   <h2>🏃 115年華南Fitness We Can<br>活動一 運動達標 <br>運動紀錄初判工具</h2>
+   
+   <div class="disclaimer">
+       ■■ <strong>重要聲明</strong><br>
+       此網頁僅供同仁初步確認紀錄是否符合規範，<strong>非正式審核結果。</strong><br>
+       <strong>(本網頁不會留存您的個人紀錄)</strong>
+   </div>
+ 
+   <img src="https://images.unsplash.com" alt="Fitness" class="banner-img">
+ 
+   <div id="entries">
+       <!-- 紀錄列將由 JS 動態生成 -->
+   </div>
+ 
+   <div class="btn-group">
+       <button class="add-btn" onclick="addEntry()">＋ 新增一筆紀錄 (上限10筆)</button>
+       <button class="check-btn" onclick="checkAll()">🚀 開始初步判定</button>
+   </div>
+ 
+   <div id="result-container"></div>
 </div>
-
+ 
 <script>
-    let entryCounter = 0;
-
-    function addEntry() {
-        const currentRows = document.querySelectorAll('.entry-row');
-        if (currentRows.length >= 10) {
-            alert("已達新增上限 (10 筆)。");
-            return;
-        }
-
-        entryCounter++;
-        const container = document.getElementById('entries');
-        const div = document.createElement('div');
-        div.className = 'entry-row';
-        div.id = `entry-${entryCounter}`;
-        div.innerHTML = `
-            <h4>紀錄 #${entryCounter}</h4>
-            <button class="remove-btn" onclick="removeEntry(${entryCounter})" title="刪除">×</button>
-            <div class="grid">
-                <div class="input-group">
-                    <label>運動日期</label>
-                    <input type="date" class="d-date" value="2026-01-23">
-                </div>
-                <div class="input-group">
-                    <label>運動項目</label>
-                    <input type="text" class="d-activity" placeholder="例如：跑步">
-                </div>
-                <div class="input-group">
-                    <label>運動時間 (分鐘)</label>
-                    <input type="number" class="d-duration" placeholder="須滿 20">
-                </div>
-                <div class="input-group">
-                    <label>距離 <span class="label-hint">（至少1公里)</span></label>
-                    <div class="dist-group">
-                        <input type="number" class="d-distance" step="0.01" placeholder="數值">
-                        <select class="d-unit">
-                            <option value="km">公里</option>
-                            <option value="mi">英里</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="input-group" style="grid-column: span 2;">
-                    <label>平均心率 (次/分) <span class="label-hint">(與距離擇一)</span></label>
-                    <input type="number" class="d-hr" placeholder="有心率紀錄請填寫">
-                </div>
-            </div>
-        `;
-        container.appendChild(div);
-    }
-
-    function removeEntry(id) {
-        if(document.querySelectorAll('.entry-row').length > 1) {
-            document.getElementById(`entry-${id}`).remove();
-        } else {
-            alert("請至少保留一筆紀錄。");
-        }
-    }
-
-    function checkAll() {
-        const rows = document.querySelectorAll('.entry-row');
-        const resultContainer = document.getElementById('result-container');
-        
-        let passCount = 0;
-        let failCount = 0;
-        let tempResultHTML = '';
-
-        rows.forEach((row, index) => {
-            const date = row.querySelector('.d-date').value;
-            const activity = row.querySelector('.d-activity').value.trim() || "未填寫項目";
-            const duration = parseFloat(row.querySelector('.d-duration').value);
-            const distVal = parseFloat(row.querySelector('.d-distance').value);
-            const unit = row.querySelector('.d-unit').value;
-            const hr = parseFloat(row.querySelector('.d-hr').value);
-
-            let errors = [];
-            if (!date) errors.push("未填日期");
-            if (activity === "未填寫項目") errors.push("未填項目");
-            if (isNaN(duration) || duration < 20) errors.push("時間未達20分鐘");
-
-            let kmEquivalent = 0;
-            if (!isNaN(distVal)) {
-                kmEquivalent = (unit === 'mi') ? distVal * 1.60934 : distVal;
-            }
-
-            const isDistanceOk = (kmEquivalent >= 1);
-            const isHrOk = (!isNaN(hr) && hr > 0);
-
-            if (!isDistanceOk && !isHrOk) {
-                errors.push("距離未達1km且無心率紀錄");
-            }
-
-            if (errors.length === 0) {
-                passCount++;
-                let reason = isDistanceOk ? `距離達標(${kmEquivalent.toFixed(2)}km)` : "具備心率紀錄";
-                tempResultHTML += `<div class="result-item pass-item"><strong>■ 紀錄 ${index + 1} [${activity}]</strong><br>初步判定：■ 符合規範<br><small>達標條件：${reason}</small></div>`;
-            } else {
-                failCount++;
-                tempResultHTML += `<div class="result-item fail-item"><strong>■ 紀錄 ${index + 1} [${activity}]</strong><br>初步判定：■ 未達標<br><small>原因：${errors.join('、')}</small></div>`;
-            }
-        });
-
-        // 構建統計摘要與詳細清單
-        resultContainer.innerHTML = `
-            <div class="result-title">🔍 初步判定結果 (2026/01/23)：</div>
-            <div class="summary-box">
-                <span class="summary-pass">符合筆數：${passCount}</span>
-                <span class="summary-fail">未達標筆數：${failCount}</span>
-            </div>
-            ${tempResultHTML}
-        `;
-        
-        resultContainer.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    // 初始化第一筆
-    addEntry();
+   let entryCounter = 0;
+ 
+   function addEntry() {
+       const currentRows = document.querySelectorAll('.entry-row');
+       if (currentRows.length >= 10) {
+           alert("已達新增上限 (10 筆)。");
+           return;
+       }
+ 
+       entryCounter++;
+       const container = document.getElementById('entries');
+       const div = document.createElement('div');
+       div.className = 'entry-row';
+       div.id = `entry-${entryCounter}`;
+       div.innerHTML = `
+           <h4>紀錄 #${entryCounter}</h4>
+           <button class="remove-btn" onclick="removeEntry(${entryCounter})" title="刪除">×</button>
+           <div class="grid">
+               <div class="input-group">
+                   <label>運動日期</label>
+                   <input type="date" class="d-date" value="2026-01-26">
+               </div>
+               <div class="input-group">
+                   <label>運動項目</label>
+                   <input type="text" class="d-activity" placeholder="例如：跑步">
+               </div>
+               <div class="input-group">
+                   <label>運動時間 (分鐘)</label>
+                   <input type="number" class="d-duration" placeholder="須滿 20">
+               </div>
+               <div class="input-group">
+                   <label>距離 <span class="label-hint">（至少1km)</span></label>
+                   <div class="dist-group">
+                       <input type="number" class="d-distance" step="0.01" placeholder="數值">
+                       <select class="d-unit">
+                           <option value="km">公里</option>
+                           <option value="mi">英里</option>
+                       </select>
+                   </div>
+               </div>
+               <div class="input-group full-width">
+                   <label>平均心率 (次/分) <span class="label-hint">(與距離擇一)</span></label>
+                   <input type="number" class="d-hr" placeholder="有心率紀錄請填寫">
+               </div>
+           </div>
+       `;
+       container.appendChild(div);
+   }
+ 
+   function removeEntry(id) {
+       if(document.querySelectorAll('.entry-row').length > 1) {
+           document.getElementById(`entry-${id}`).remove();
+       } else {
+           alert("請至少保留一筆紀錄。");
+       }
+   }
+ 
+   function checkAll() {
+       const rows = document.querySelectorAll('.entry-row');
+       const resultContainer = document.getElementById('result-container');
+       
+       let passCount = 0;
+       let failCount = 0;
+       let tempResultHTML = '';
+ 
+       rows.forEach((row, index) => {
+           const date = row.querySelector('.d-date').value;
+           const activity = row.querySelector('.d-activity').value.trim() || "未填寫項目";
+           const duration = parseFloat(row.querySelector('.d-duration').value);
+           const distVal = parseFloat(row.querySelector('.d-distance').value);
+           const unit = row.querySelector('.d-unit').value;
+           const hr = parseFloat(row.querySelector('.d-hr').value);
+ 
+           let errors = [];
+           if (!date) errors.push("未填日期");
+           if (activity === "未填寫項目") errors.push("未填項目");
+           if (isNaN(duration) || duration < 20) errors.push("時間未滿20分鐘");
+ 
+           let kmEquivalent = 0;
+           if (!isNaN(distVal)) {
+               kmEquivalent = (unit === 'mi') ? distVal * 1.60934 : distVal;
+           }
+ 
+           const isDistanceOk = (kmEquivalent >= 1);
+           const isHrOk = (!isNaN(hr) && hr > 0);
+ 
+           if (!isDistanceOk && !isHrOk) {
+               errors.push("距離未滿1km且無心率紀錄");
+           }
+ 
+           if (errors.length === 0) {
+               passCount++;
+               let reason = isDistanceOk ? `距離達標(${kmEquivalent.toFixed(2)}km)` : "具備心率紀錄";
+               tempResultHTML += `<div class="result-item pass-item"><strong>■ 紀錄 ${index + 1} [${activity}]</strong><br>判定：符合規範<br><small>條件：${reason}</small></div>`;
+           } else {
+               failCount++;
+               tempResultHTML += `<div class="result-item fail-item"><strong>■ 紀錄 ${index + 1} [${activity}]</strong><br>判定：未達標<br><small>原因：${errors.join('、')}</small></div>`;
+           }
+       });
+ 
+       resultContainer.innerHTML = `
+           <div class="result-title">🔍 判定結果 (2026/01/26)：</div>
+           <div class="summary-box">
+               <span class="summary-pass">符合筆數：${passCount}</span>
+               <span class="summary-fail">未達標筆數：${failCount}</span>
+           </div>
+           ${tempResultHTML}
+       `;
+       
+       resultContainer.scrollIntoView({ behavior: 'smooth' });
+   }
+ 
+   addEntry();
 </script>
-
+ 
 </body>
 </html>
-
-
