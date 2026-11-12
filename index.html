@@ -136,6 +136,9 @@ let lastResults = [];
 
  
 
+// 定義只採計距離的運動項目清單（方便統一管理）
+const DISTANCE_ONLY_ACTIVITIES = ['走路', '健走', '單車'];
+
 function addEntry() {
     const currentRows = document.querySelectorAll('.entry-row');
     if (currentRows.length >= 10) { 
@@ -156,13 +159,29 @@ function addEntry() {
     div.className = 'entry-row';
     div.id = `entry-${entryCounter}`;
     
-    // 2. 將 value 改為 ${todayStr}
+    // 2. 替換為當天日期 + 分組下拉選單 + 連動事件
     div.innerHTML = `
         <h4>紀錄 #${entryCounter}</h4>
         <button class="remove-btn" onclick="removeEntry(${entryCounter})">×</button>
         <div class="grid">
             <div class="input-group"><label>日期<span class="label-hint">(同一日僅採計一次)</span></label><input type="date" class="d-date" value="${todayStr}"></div>
-            <div class="input-group"><label>運動項目<span class="label-hint">（需有明確圖示或文字)</span></label><input type="text" class="d-activity" placeholder="例：跑步"></div>
+            <div class="input-group">
+                <label>運動項目<span class="label-hint">（需有明確圖示或文字)</span></label>
+                <select class="d-activity" onchange="handleActivityChange(this)">
+                    <option value="" disabled selected>請選擇運動項目</option>
+                    <optgroup label="僅採計距離（室內外皆可）">
+                        <option value="走路">走路（室內/外）</option>
+                        <option value="健走">健走（室內/外）</option>
+                        <option value="單車">單車（室內/外）</option>
+                    </optgroup>
+                    <optgroup label="採計距離或心率">
+                        <option value="跑步">跑步</option>
+                        <option value="游泳">游泳</option>
+                        <option value="登山">登山</option>
+                        <option value="其他有氧">其他有氧運動</option>
+                    </optgroup>
+                </select>
+            </div>
             <div class="input-group"><label>時間 (分鐘)</label><input type="number" class="d-duration" placeholder="須滿30"></div>
             <div class="input-group"><label>距離 <span class="label-hint">（至少2公里)</span></label>
                 <div class="dist-group">
@@ -176,168 +195,140 @@ function addEntry() {
     container.appendChild(div);
 }
 
-
- 
+// 選單切換時的防呆連動：若為走路/健走/單車，自動鎖定並清空心率欄位
+function handleActivityChange(selectEl) {
+    const row = selectEl.closest('.entry-row');
+    const distInput = row.querySelector('.d-distance');
+    const hrInput = row.querySelector('.d-hr');
+    
+    if (DISTANCE_ONLY_ACTIVITIES.includes(selectEl.value)) {
+        distInput.placeholder = "必填（至少2公里）";
+        hrInput.value = "";
+        hrInput.disabled = true;
+        hrInput.placeholder = "此項目僅採計距離，無須填寫心率";
+    } else {
+        distInput.placeholder = "數值";
+        hrInput.disabled = false;
+        hrInput.placeholder = "選填";
+    }
+}
 
 function removeEntry(id) {
-
-    if(document.querySelectorAll('.entry-row').length > 1) document.getElementById(`entry-${id}`).remove();
-
+    if (document.querySelectorAll('.entry-row').length > 1) {
+        document.getElementById(`entry-${id}`).remove();
+    }
 }
-
- 
 
 function checkAll() {
-
     const rows = document.querySelectorAll('.entry-row');
-
     const resultContainer = document.getElementById('result-container');
-
     const exportBtn = document.getElementById('export-btn');
-
     const exportHint = document.getElementById('export-hint');
 
- 
-
     let passCount = 0, failCount = 0, tempHTML = '';
-
     lastResults = [];
-
    
-
     // 日期索引物件：儲存各日期對應到的序號
-
     const dateMap = {};
-
     rows.forEach((row, index) => {
-
         const date = row.querySelector('.d-date').value;
-
         if (date) {
-
             if (!dateMap[date]) dateMap[date] = [];
-
-            dateMap[date].push(index + 1); // 存入第幾筆紀錄
-
+            dateMap[date].push(index + 1);
         }
-
     });
 
- 
-
     rows.forEach((row, index) => {
-
         const currentIdx = index + 1;
-
         const date = row.querySelector('.d-date').value;
-
         const activity = row.querySelector('.d-activity').value.trim() || "未填";
-
         const duration = parseFloat(row.querySelector('.d-duration').value);
-
         const distVal = parseFloat(row.querySelector('.d-distance').value);
-
         const unit = row.querySelector('.d-unit').value;
-
         const hr = parseFloat(row.querySelector('.d-hr').value);
 
- 
-
         let errors = [];
-
        
-
-        // 檢查日期重複，並找出重複的序號
-
+        // 1. 檢查日期重複
         if (!date) {
-
             errors.push("未填日期");
-
         } else if (dateMap[date].length > 1) {
-
             const others = dateMap[date].filter(i => i !== currentIdx);
-
             errors.push(`日期與紀錄 #${others.join(', #')} 重複`);
-
         }
-
        
-
+        // 2. 檢查項目與時間
         if (activity === "未填") errors.push("未填項目");
-
         if (isNaN(duration) || duration < 30) errors.push("未滿30分");
 
- 
-
+        // 3. 檢查距離與心率（區分「僅採計距離」與「距離/心率擇一」）
         let kmEq = isNaN(distVal) ? 0 : (unit === 'mi' ? distVal * 1.60934 : distVal);
-
         const okDist = (kmEq >= 2);
-
         const okHr = (!isNaN(hr) && hr > 0);
+        const isDistOnly = DISTANCE_ONLY_ACTIVITIES.includes(activity);
 
-        if (!okDist && !okHr) errors.push("距離與心率皆未達標");
-
- 
-
-        const status = (errors.length === 0) ? "符合" : "未達標";
-
-        const note = (errors.length === 0) ? (okDist ? `${kmEq.toFixed(2)}km達標` : "心率達標") : errors.join('、');
-
- 
-
-        if (errors.length === 0) {
-
-            passCount++;
-
-            tempHTML += `<div class="result-item pass-item"><strong>■ 紀錄 ${currentIdx} [${activity}]</strong><br>判定：符合<br><small>${note}</small></div>`;
-
+        if (isDistOnly) {
+            // 走路、健走、單車：強制檢查距離是否達 2 公里
+            if (!okDist) errors.push("此項目僅採計距離（須滿2公里）");
         } else {
-
-            failCount++;
-
-            tempHTML += `<div class="result-item fail-item"><strong>■ 紀錄 ${currentIdx} [${activity}]</strong><br>判定：未達標<br><small>原因：${note}</small></div>`;
-
+            // 其他運動：距離與心率擇一達標即可
+            if (!okDist && !okHr) errors.push("距離與心率皆未達標");
         }
 
- 
+        // 4. 判定結果與備註文字
+        const status = (errors.length === 0) ? "符合" : "未達標";
+        let note = "";
+        if (errors.length === 0) {
+            note = okDist ? `${kmEq.toFixed(2)}km達標` : `心率達標(${hr}次/分)`;
+        } else {
+            note = errors.join('、');
+        }
 
-        lastResults.push({ "序號": currentIdx, "日期": date, "項目": activity, "時間": duration, "距離(km)": kmEq.toFixed(2), "心率": hr || "-", "判定": status, "原因/備註": note });
+        if (errors.length === 0) {
+            passCount++;
+            tempHTML += `<div class="result-item pass-item"><strong>■ 紀錄 ${currentIdx} [${activity}]</strong><br>判定：符合<br><small>${note}</small></div>`;
+        } else {
+            failCount++;
+            tempHTML += `<div class="result-item fail-item"><strong>■ 紀錄 ${currentIdx} [${activity}]</strong><br>判定：未達標<br><small>原因：${note}</small></div>`;
+        }
 
+        // 匯出資料（若為純計距離項目，心率固定顯示 "-"）
+        lastResults.push({ 
+            "序號": currentIdx, 
+            "日期": date, 
+            "項目": activity, 
+            "時間": isNaN(duration) ? "-" : duration, 
+            "距離(km)": kmEq.toFixed(2), 
+            "心率": (isDistOnly || isNaN(hr)) ? "-" : hr, 
+            "判定": status, 
+            "原因/備註": note 
+        });
     });
 
- 
-
     resultContainer.innerHTML = `<div class="summary-box"><span class="summary-pass">符合：${passCount}</span><span class="summary-fail">未達標：${failCount}</span></div>${tempHTML}`;
-
     exportBtn.style.display = 'block';
-
     exportHint.style.display = 'block';
-
     resultContainer.scrollIntoView({ behavior: 'smooth' });
-
 }
-
- 
 
 function exportToExcel() {
-
     if (lastResults.length === 0) return;
-
+    
+    // 修正為當地日期檔名，避免跨日誤差
+    const today = new Date();
+    const localDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    
     let csv = "\ufeff序號,日期,項目,時間(分),距離(km),心率,判定結果,備註\n";
-
-    lastResults.forEach(r => { csv += `${r["序號"]},${r["日期"]},${r["項目"]},${r["時間"]},${r["距離(km)"]},${r["心率"]},${r["判定"]},${r["原因/備註"]}\n`; });
-
+    lastResults.forEach(r => { 
+        csv += `${r["序號"]},${r["日期"]},${r["項目"]},${r["時間"]},${r["距離(km)"]},${r["心率"]},${r["判定"]},${r["原因/備註"]}\n`; 
+    });
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-
     const link = document.createElement("a");
-
     link.href = URL.createObjectURL(blob);
-
-    link.download = `華南運動判定_${new Date().toISOString().slice(0,10)}.csv`;
-
+    link.download = `華南運動判定_${localDateStr}.csv`;
     link.click();
-
 }
+
 
  
 
