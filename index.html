@@ -136,8 +136,8 @@ let lastResults = [];
 
  
 
-// 定義只採計距離的運動項目清單（方便統一管理）
-const DISTANCE_ONLY_ACTIVITIES = ['走路', '健走', '單車'];
+// 定義只採計距離的運動項目清單（跑步、走路、健走、單車）
+const DISTANCE_ONLY_ACTIVITIES = ['跑步', '走路', '健走', '單車'];
 
 function addEntry() {
     const currentRows = document.querySelectorAll('.entry-row');
@@ -159,7 +159,7 @@ function addEntry() {
     div.className = 'entry-row';
     div.id = `entry-${entryCounter}`;
     
-    // 2. 替換為當天日期 + 分組下拉選單 + 連動事件
+    // 2. 新增「其他運動項目」與預設隱藏的手動輸入框 (.d-activity-other)
     div.innerHTML = `
         <h4>紀錄 #${entryCounter}</h4>
         <button class="remove-btn" onclick="removeEntry(${entryCounter})">×</button>
@@ -169,18 +169,19 @@ function addEntry() {
                 <label>運動項目<span class="label-hint">（需有明確圖示或文字)</span></label>
                 <select class="d-activity" onchange="handleActivityChange(this)">
                     <option value="" disabled selected>請選擇運動項目</option>
-                    <optgroup label="僅採計距離（室內外皆可）">
-                        <option value="走路">走路（室內/外）</option>
-                        <option value="健走">健走（室內/外）</option>
-                        <option value="單車">單車（室內/外）</option>
-                    </optgroup>
-                    <optgroup label="採計距離或心率">
-                        <option value="跑步">跑步</option>
-                        <option value="游泳">游泳</option>
-                        <option value="登山">登山</option>
-                        <option value="其他有氧">其他有氧運動</option>
-                    </optgroup>
+                    <option value="跑步">跑步（室內/外）</option>
+                    <option value="走路">走路（室內/外）</option>
+                    <option value="健走">健走（室內/外）</option>
+                    <option value="單車">單車（室內/外）</option>
+                    <option value="游泳">游泳</option>
+                    <option value="登山">登山</option>
+                    <option value="重訓">重訓 / 肌力訓練</option>
+                    <option value="球類運動">球類運動</option>
+                    <option value="瑜伽">瑜伽 / 皮拉提斯</option>
+                    <option value="有氧健身">有氧舞蹈 / 健身操</option>
+                    <option value="其他運動項目">其他運動項目</option>
                 </select>
+                <input type="text" class="d-activity-other" placeholder="請輸入具體運動名稱（必填）" style="display: none; margin-top: 6px;">
             </div>
             <div class="input-group"><label>時間 (分鐘)</label><input type="number" class="d-duration" placeholder="須滿30"></div>
             <div class="input-group"><label>距離 <span class="label-hint">（至少2公里)</span></label>
@@ -195,12 +196,23 @@ function addEntry() {
     container.appendChild(div);
 }
 
-// 選單切換時的防呆連動：若為走路/健走/單車，自動鎖定並清空心率欄位
+// 選單切換時的連動：處理心率鎖定 + 「其他運動項目」輸入框顯示
 function handleActivityChange(selectEl) {
     const row = selectEl.closest('.entry-row');
     const distInput = row.querySelector('.d-distance');
     const hrInput = row.querySelector('.d-hr');
+    const otherInput = row.querySelector('.d-activity-other');
     
+    // 1. 控制「其他運動項目」自訂輸入框
+    if (selectEl.value === '其他運動項目') {
+        otherInput.style.display = 'block';
+        otherInput.focus();
+    } else {
+        otherInput.style.display = 'none';
+        otherInput.value = '';
+    }
+
+    // 2. 控制「僅採計距離」項目的心率欄位鎖定
     if (DISTANCE_ONLY_ACTIVITIES.includes(selectEl.value)) {
         distInput.placeholder = "必填（至少2公里）";
         hrInput.value = "";
@@ -228,7 +240,6 @@ function checkAll() {
     let passCount = 0, failCount = 0, tempHTML = '';
     lastResults = [];
    
-    // 日期索引物件：儲存各日期對應到的序號
     const dateMap = {};
     rows.forEach((row, index) => {
         const date = row.querySelector('.d-date').value;
@@ -241,13 +252,15 @@ function checkAll() {
     rows.forEach((row, index) => {
         const currentIdx = index + 1;
         const date = row.querySelector('.d-date').value;
-        const activity = row.querySelector('.d-activity').value.trim() || "未填";
+        const rawActivity = row.querySelector('.d-activity').value.trim();
+        const otherActivity = row.querySelector('.d-activity-other').value.trim();
         const duration = parseFloat(row.querySelector('.d-duration').value);
         const distVal = parseFloat(row.querySelector('.d-distance').value);
         const unit = row.querySelector('.d-unit').value;
         const hr = parseFloat(row.querySelector('.d-hr').value);
 
         let errors = [];
+        let displayActivity = rawActivity || "未填";
        
         // 1. 檢查日期重複
         if (!date) {
@@ -257,25 +270,32 @@ function checkAll() {
             errors.push(`日期與紀錄 #${others.join(', #')} 重複`);
         }
        
-        // 2. 檢查項目與時間
-        if (activity === "未填") errors.push("未填項目");
+        // 2. 檢查運動項目（包含「其他運動項目」的必填內容驗證）
+        if (!rawActivity) {
+            errors.push("未填項目");
+        } else if (rawActivity === "其他運動項目") {
+            if (!otherActivity) {
+                errors.push("未填寫其他運動項目內容");
+            } else {
+                displayActivity = `其他(${otherActivity})`;
+            }
+        }
+
+        // 3. 檢查時間
         if (isNaN(duration) || duration < 30) errors.push("未滿30分");
 
-        // 3. 檢查距離與心率（區分「僅採計距離」與「距離/心率擇一」）
+        // 4. 檢查距離與心率
         let kmEq = isNaN(distVal) ? 0 : (unit === 'mi' ? distVal * 1.60934 : distVal);
         const okDist = (kmEq >= 2);
         const okHr = (!isNaN(hr) && hr > 0);
-        const isDistOnly = DISTANCE_ONLY_ACTIVITIES.includes(activity);
+        const isDistOnly = DISTANCE_ONLY_ACTIVITIES.includes(rawActivity);
 
         if (isDistOnly) {
-            // 走路、健走、單車：強制檢查距離是否達 2 公里
             if (!okDist) errors.push("此項目僅採計距離（須滿2公里）");
         } else {
-            // 其他運動：距離與心率擇一達標即可
             if (!okDist && !okHr) errors.push("距離與心率皆未達標");
         }
 
-        // 4. 判定結果與備註文字
         const status = (errors.length === 0) ? "符合" : "未達標";
         let note = "";
         if (errors.length === 0) {
@@ -286,17 +306,16 @@ function checkAll() {
 
         if (errors.length === 0) {
             passCount++;
-            tempHTML += `<div class="result-item pass-item"><strong>■ 紀錄 ${currentIdx} [${activity}]</strong><br>判定：符合<br><small>${note}</small></div>`;
+            tempHTML += `<div class="result-item pass-item"><strong>■ 紀錄 ${currentIdx} [${displayActivity}]</strong><br>判定：符合<br><small>${note}</small></div>`;
         } else {
             failCount++;
-            tempHTML += `<div class="result-item fail-item"><strong>■ 紀錄 ${currentIdx} [${activity}]</strong><br>判定：未達標<br><small>原因：${note}</small></div>`;
+            tempHTML += `<div class="result-item fail-item"><strong>■ 紀錄 ${currentIdx} [${displayActivity}]</strong><br>判定：未達標<br><small>原因：${note}</small></div>`;
         }
 
-        // 匯出資料（若為純計距離項目，心率固定顯示 "-"）
         lastResults.push({ 
             "序號": currentIdx, 
             "日期": date, 
-            "項目": activity, 
+            "項目": displayActivity, 
             "時間": isNaN(duration) ? "-" : duration, 
             "距離(km)": kmEq.toFixed(2), 
             "心率": (isDistOnly || isNaN(hr)) ? "-" : hr, 
@@ -314,7 +333,6 @@ function checkAll() {
 function exportToExcel() {
     if (lastResults.length === 0) return;
     
-    // 修正為當地日期檔名，避免跨日誤差
     const today = new Date();
     const localDateStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     
