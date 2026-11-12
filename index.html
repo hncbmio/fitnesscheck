@@ -8,7 +8,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>115年華南Fitness We Can 判定工具</title>
+    <title>116年華南Fitness We Can 判定工具</title>
 
     <style>
 
@@ -137,54 +137,45 @@ let lastResults = [];
  
 
 function addEntry() {
-
     const currentRows = document.querySelectorAll('.entry-row');
-
-    if (currentRows.length >= 10) { alert("已達上限"); return; }
+    if (currentRows.length >= 10) { 
+        alert("已達上限"); 
+        return; 
+    }
+    
+    // 1. 取得當地時間並格式化為 YYYY-MM-DD
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
 
     entryCounter++;
-
     const container = document.getElementById('entries');
-
     const div = document.createElement('div');
-
     div.className = 'entry-row';
-
     div.id = `entry-${entryCounter}`;
-
+    
+    // 2. 將 value 改為 ${todayStr}
     div.innerHTML = `
-
         <h4>紀錄 #${entryCounter}</h4>
-
         <button class="remove-btn" onclick="removeEntry(${entryCounter})">×</button>
-
         <div class="grid">
-
-            <div class="input-group"><label>日期<span class="label-hint">(同一日僅採計一次)</span></label><input type="date" class="d-date" value="2026-01-26"></div>
-
+            <div class="input-group"><label>日期<span class="label-hint">(同一日僅採計一次)</span></label><input type="date" class="d-date" value="${todayStr}"></div>
             <div class="input-group"><label>運動項目<span class="label-hint">（需有明確圖示或文字)</span></label><input type="text" class="d-activity" placeholder="例：跑步"></div>
-
-            <div class="input-group"><label>時間 (分鐘)</label><input type="number" class="d-duration" placeholder="須滿20"></div>
-
-            <div class="input-group"><label>距離 <span class="label-hint">（至少1公里)</span></label>
-
+            <div class="input-group"><label>時間 (分鐘)</label><input type="number" class="d-duration" placeholder="須滿30"></div>
+            <div class="input-group"><label>距離 <span class="label-hint">（至少2公里)</span></label>
                 <div class="dist-group">
-
                     <input type="number" class="d-distance" step="0.01" placeholder="數值">
-
                     <select class="d-unit"><option value="km">公里</option><option value="mi">英里</option></select>
-
                 </div>
-
             </div>
-
             <div class="input-group full-width"><label>平均心率 (次/分)<span class="label-hint">(與距離擇一)</span></label><input type="number" class="d-hr" placeholder="選填"></div>
-
         </div>`;
-
+        
     container.appendChild(div);
-
 }
+
 
  
 
@@ -274,13 +265,13 @@ function checkAll() {
 
         if (activity === "未填") errors.push("未填項目");
 
-        if (isNaN(duration) || duration < 20) errors.push("未滿20分");
+        if (isNaN(duration) || duration < 30) errors.push("未滿30分");
 
  
 
         let kmEq = isNaN(distVal) ? 0 : (unit === 'mi' ? distVal * 1.60934 : distVal);
 
-        const okDist = (kmEq >= 1);
+        const okDist = (kmEq >= 2);
 
         const okHr = (!isNaN(hr) && hr > 0);
 
